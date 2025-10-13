@@ -3,14 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Compras - AnselShop</title>
-  <script src="script.js" defer></script>
+  <title>Simulador Carrito - Entregable 2</title>
+  <link rel="stylesheet" href="./styles.css/styles.css">
 </head>
 <body>
-  <h1>Simulador de Compras - AnselShop</h1>
-  <p>Este simulador permite agregar productos a un carrito de compras, calcular descuentos, costos de envío y mostrar un resumen final de la compra. La interacción se realiza mediante cuadros de diálogo y la consola.</p>
+  <header>
+    <h1>Simulador Carrito - AnselShop</h1>
+    <nav>
+      <button id="btn-show-catalog">Catálogo</button>
+      <button id="btn-show-cart">Carrito (<span id="cart-count">0</span>)</button>
+      <button id="btn-show-form">Agregar Producto</button>
+    </nav>
+  </header>
 
-  <button id="startBtn"> Iniciar simulador </button>
-  <button id="demoBtn"> Ejecutar demo rápida </button>
+  <section id="catalog-section" class="section active">
+    <h2>Catálogo de Productos</h2>
+    <div id="catalog"></div>
+  </section>
+
+  <section id="cart-section" class="section">
+    <h2>Carrito de Compras</h2>
+    <div id="cart-list"></div>
+    <p>Total: $<span id="cart-total">0.00</span></p>
+    <button id="btn-clear-cart">Vaciar carrito</button>
+  </section>
+
+  <section id="form-section" class="section">
+    <h2>Agregar Producto</h2>
+    <form id="product-form">
+      <label>Nombre: <input type="text" id="p-name" required></label>
+      <label>Precio: <input type="number" id="p-price" min="0" step="0.01" required></label>
+      <label>Cantidad: <input type="number" id="p-stock" min="1" step="1" required></label>
+      <button type="submit">Agregar</button>
+    </form>
+    <div id="form-message"></div>
+  </section>
+
+  <script src="./js/app.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sections = {
+        catalog: document.getElementById("catalog-section"),
+        cart: document.getElementById("cart-section"),
+        form: document.getElementById("form-section")
+      };
+
+      document.getElementById("btn-show-catalog").addEventListener("click", ()=>showSection("catalog"));
+      document.getElementById("btn-show-cart").addEventListener("click", ()=>showSection("cart"));
+      document.getElementById("btn-show-form").addEventListener("click", ()=>showSection("form"));
+
+      function showSection(name){
+        Object.values(sections).forEach(sec => sec.classList.remove("active"));
+        sections[name].classList.add("active");
+      }
+    });
+  </script>
 </body>
 </html>
