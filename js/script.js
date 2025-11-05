@@ -1,117 +1,175 @@
 const SHOP_NAME = "AnselShop";
+const STORAGE_CART = "cart_castellanos";
+
 let carrito = [];
-let usuario = "";
+let productosCatalogo = [
+  { nombre: "Mouse Gamer", precio: 2500 },
+  { nombre: "Teclado Mecánico", precio: 4200 },
+  { nombre: "Auriculares Inalámbricos", precio: 3500 },
+  { nombre: "Parlante Bluetooth", precio: 2800 },
+  { nombre: "Monitor 24\"", precio: 8500 }
+];
 
-function obtenerDatosUsuario() {
-  const nombre = prompt("Ingrese su nombre (o cancele para continuar como Invitado):");
-  usuario = nombre && nombre.trim() ? nombre.trim() : "Invitado";
-  console.log("Usuario:", usuario);
-  return usuario;
+const q = selector => document.querySelector(selector);
+
+document.addEventListener("DOMContentLoaded", () => {
+  cargarCarrito();
+  renderCatalogo();
+  renderCarrito();
+  actualizarContador();
+
+  // Botones de navegación
+  q("#btn-show-catalog").addEventListener("click", () => mostrarSeccion("catalog-section"));
+  q("#btn-show-cart").addEventListener("click", () => mostrarSeccion("cart-section"));
+
+  // Botón vaciar carrito
+  q("#btn-clear-cart").addEventListener("click", vaciarCarrito);
+
+  // Botón checkout
+  q("#btn-checkout").addEventListener("click", checkout);
+});
+
+function mostrarSeccion(idSeccion) {
+  document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+  q(`#${idSeccion}`).classList.add("active");
 }
 
-function agregarProducto() {
-  const nombre = prompt("Nombre del producto:");
-  if (!nombre) return false;
+function cargarCarrito() {
+  const saved = localStorage.getItem(STORAGE_CART);
+  carrito = saved ? JSON.parse(saved) : [];
+}
 
-  const precio = parseFloat(prompt(`Precio de "${nombre}" (solo números):`));
-  if (isNaN(precio) || precio <= 0) {
-    alert("Precio inválido. No se agregó el producto.");
-    return false;
-  }
+function guardarCarrito() {
+  localStorage.setItem(STORAGE_CART, JSON.stringify(carrito));
+}
 
-  const cantidad = parseInt(prompt("Cantidad (número entero):"), 10);
-  if (isNaN(cantidad) || cantidad <= 0) {
-    alert("Cantidad inválida. No se agregó el producto.");
-    return false;
-  }
+function renderCatalogo() {
+  const catalog = q("#catalog");
+  catalog.innerHTML = "";
 
+  productosCatalogo.forEach((p, idx) => {
+    const card = document.createElement("div");
+    card.className = "catalog-card";
+    card.innerHTML = `
+      <strong>${p.nombre}</strong>
+      <p>Precio: $${p.precio.toFixed(2)}</p>
+      <button data-idx="${idx}" class="btn-add-cart">Agregar al carrito</button>
+    `;
+    card.querySelector(".btn-add-cart").addEventListener("click", () => {
+      agregarAlCarrito(p.nombre, p.precio, 1);
+      Swal.fire({
+        icon: "success",
+        title: "Agregado",
+        text: `${p.nombre} fue agregado al carrito.`,
+        timer: 1200,
+        showConfirmButton: false
+      });
+    });
+    catalog.appendChild(card);
+  });
+}
+
+function agregarAlCarrito(nombre, precio, cantidad) {
   const existente = carrito.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
-  if (existente) {
-    existente.cantidad += cantidad;
-  } else {
-    carrito.push({ nombre: nombre.trim(), precio, cantidad });
-  }
+  if (existente) existente.cantidad += cantidad;
+  else carrito.push({ nombre, precio, cantidad });
 
-  console.log(`Producto agregado: ${nombre} - $${precio} x ${cantidad}`);
-  return true;
+  guardarCarrito();
+  renderCarrito();
+  actualizarContador();
 }
 
-function calcularTotales() {
-  let subtotal = 0;
-  carrito.forEach(p => subtotal += p.precio * p.cantidad);
+function renderCarrito() {
+  const list = q("#cart-list");
+  list.innerHTML = "";
 
-  let descuento = 0;
-  if (subtotal >= 10000) descuento = subtotal * 0.12;
-  else if (subtotal >= 5000) descuento = subtotal * 0.06;
-
-  const totalDespuesDescuento = subtotal - descuento;
-  const envio = totalDespuesDescuento > 7000 ? 0 : 800;
-
-  let regalo = null;
-  if (carrito.length >= 3) regalo = "Cupón 10% para la próxima compra";
-
-  const total = totalDespuesDescuento + envio;
-  return { subtotal, descuento, envio, total, regalo };
-}
-
-function mostrarResumen() {
   if (carrito.length === 0) {
-    alert("El carrito está vacío.");
+    list.innerHTML = "<p>El carrito está vacío.</p>";
+    q("#cart-total").textContent = "0.00";
     return;
   }
 
-  const t = calcularTotales();
-  let mensaje = `Resumen de la compra - ${SHOP_NAME}\nUsuario: ${usuario}\n\nProductos:\n`;
-  carrito.forEach(p => {
-    mensaje += `- ${p.nombre}: $${p.precio} x ${p.cantidad} = $${(p.precio * p.cantidad).toFixed(2)}\n`;
+  carrito.forEach((item, idx) => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    const subtotal = item.precio * item.cantidad;
+    div.innerHTML = `
+      <strong>${item.nombre}</strong> - $${item.precio.toFixed(2)} x 
+      <input type="number" min="1" max="99" value="${item.cantidad}" data-idx="${idx}" class="cart-qty"> 
+      = $${subtotal.toFixed(2)}
+      <button data-idx="${idx}" class="btn-remove">Quitar</button>
+    `;
+
+    // Cambiar cantidad
+    div.querySelector(".cart-qty").addEventListener("change", e => {
+      const idx = Number(e.target.dataset.idx);
+      carrito[idx].cantidad = Math.max(1, Number(e.target.value) || 1);
+      guardarCarrito();
+      renderCarrito();
+      actualizarContador();
+    });
+
+    // Quitar producto
+    div.querySelector(".btn-remove").addEventListener("click", () => {
+      carrito.splice(idx, 1);
+      guardarCarrito();
+      renderCarrito();
+      actualizarContador();
+    });
+
+    list.appendChild(div);
   });
 
-  mensaje += `\nSubtotal: $${t.subtotal.toFixed(2)}\nDescuento: $${t.descuento.toFixed(2)}\nEnvío: $${t.envio.toFixed(2)}\nTOTAL: $${t.total.toFixed(2)}\n`;
-  if (t.regalo) mensaje += `\nObsequio: ${t.regalo}`;
-
-  alert(mensaje);
-  console.log(mensaje);
+  const totales = calcularTotales();
+  q("#cart-total").textContent = totales.total.toFixed(2);
 }
 
-function ejecutarSimuladorInteractivo() {
-  obtenerDatosUsuario();
+function actualizarContador() {
+  const count = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+  q("#cart-count").textContent = count;
+}
 
-  let seguir = true;
-  while (seguir) {
-    const agregado = agregarProducto();
-    if (!agregado) {
-      seguir = confirm("¿Desea intentar agregar otro producto?");
-    } else {
-      seguir = confirm("¿Desea agregar otro producto al carrito?");
-    }
+function calcularTotales() {
+  let subtotal = carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
+  let descuento = subtotal >= 10000 ? subtotal * 0.12 : subtotal >= 5000 ? subtotal * 0.06 : 0;
+  let envio = subtotal - descuento > 7000 ? 0 : 800;
+  let regalo = carrito.length >= 3 ? "Cupón 10% para la próxima compra" : null;
+  let total = subtotal - descuento + envio;
+  return { subtotal, descuento, envio, total, regalo };
+}
+
+function vaciarCarrito() {
+  carrito = [];
+  guardarCarrito();
+  renderCarrito();
+  actualizarContador();
+  Swal.fire({
+    icon: "info",
+    title: "Carrito vacío",
+    text: "Todos los productos fueron removidos.",
+    timer: 1200,
+    showConfirmButton: false
+  });
+}
+
+function checkout() {
+  if (carrito.length === 0) {
+    Swal.fire({ icon: "warning", title: "Carrito vacío", text: "Agrega productos antes de comprar." });
+    return;
   }
 
-  if (carrito.length && confirm("¿Tiene un cupón de descuento adicional?")) {
-    const codigo = prompt("Ingrese el código del cupón:");
-    if (codigo && codigo.trim().toUpperCase() === "AHORA5") {
-      alert("Cupón válido: 5% aplicado sobre el subtotal.");
-    } else {
-      alert("Cupón inválido o cancelado.");
-    }
-  }
+  const totales = calcularTotales();
+  let mensaje = `Subtotal: $${totales.subtotal.toFixed(2)}\nDescuento: $${totales.descuento.toFixed(2)}\nEnvío: $${totales.envio.toFixed(2)}\nTOTAL: $${totales.total.toFixed(2)}`;
+  if (totales.regalo) mensaje += `\nRegalo: ${totales.regalo}`;
 
-  mostrarResumen();
+  Swal.fire({
+    icon: "success",
+    title: "Compra realizada",
+    html: mensaje.replace(/\n/g, "<br>"),
+  });
+
+  carrito = [];
+  guardarCarrito();
+  renderCarrito();
+  actualizarContador();
 }
-
-function ejecutarDemoRapida() {
-  usuario = "DemoUser";
-  carrito = [
-    { nombre: "Auriculares", precio: 3500, cantidad: 1 },
-    { nombre: "Teclado", precio: 4200, cantidad: 1 },
-    { nombre: "Mouse", precio: 1800, cantidad: 1 }
-  ];
-  mostrarResumen();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.getElementById("startBtn");
-  const demoBtn = document.getElementById("demoBtn");
-
-  if (startBtn) startBtn.addEventListener("click", ejecutarSimuladorInteractivo);
-  if (demoBtn) demoBtn.addEventListener("click", ejecutarDemoRapida);
-});
