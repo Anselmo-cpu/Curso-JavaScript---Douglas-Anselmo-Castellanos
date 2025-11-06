@@ -21,7 +21,7 @@ function agregarAlCarrito(nombre, precio, cantidad) {
   const existente = carrito.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
   if (existente) existente.cantidad += cantidad;
   else carrito.push({ nombre, precio, cantidad });
-  guardarCarrito();
+  refrescarCarrito(); // Usamos la nueva función centralizada
 }
 
 // Calcular totales del carrito
@@ -34,7 +34,7 @@ function calcularTotales() {
   return { subtotal, descuento, envio, total, regalo };
 }
 
-// Cargar productos desde JSON
+// Cargar productos desde JSON externo
 async function cargarProductos() {
   try {
     const res = await fetch('./data/productos.json');

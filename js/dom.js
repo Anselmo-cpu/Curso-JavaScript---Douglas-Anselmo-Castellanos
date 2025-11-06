@@ -1,6 +1,13 @@
 // dom.js
 const q = selector => document.querySelector(selector);
 
+// Función centralizada para refrescar carrito
+function refrescarCarrito() {
+  guardarCarrito();
+  renderCarrito();
+  actualizarContador();
+}
+
 // Mostrar sección (Catálogo o Carrito)
 function mostrarSeccion(idSeccion) {
   document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
@@ -23,8 +30,6 @@ function renderCatalogo() {
 
     card.querySelector(".btn-add-cart").addEventListener("click", () => {
       agregarAlCarrito(p.nombre, p.precio, 1);
-      renderCarrito();
-      actualizarContador();
       Swal.fire({
         icon: "success",
         title: "Agregado",
@@ -60,21 +65,15 @@ function renderCarrito() {
       <button data-idx="${idx}" class="btn-remove">Quitar</button>
     `;
 
-    // Cambiar cantidad
     div.querySelector(".cart-qty").addEventListener("change", e => {
       const i = Number(e.target.dataset.idx);
       carrito[i].cantidad = Math.max(1, Number(e.target.value) || 1);
-      guardarCarrito();
-      renderCarrito();
-      actualizarContador();
+      refrescarCarrito();
     });
 
-    // Quitar producto
     div.querySelector(".btn-remove").addEventListener("click", () => {
       carrito.splice(idx, 1);
-      guardarCarrito();
-      renderCarrito();
-      actualizarContador();
+      refrescarCarrito();
     });
 
     list.appendChild(div);

@@ -12,9 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Vaciar carrito
   q("#btn-clear-cart").addEventListener("click", () => {
     carrito = [];
-    guardarCarrito();
-    renderCarrito();
-    actualizarContador();
+    refrescarCarrito();
     Swal.fire({
       icon: "info",
       title: "Carrito vacío",
@@ -42,8 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     carrito = [];
-    guardarCarrito();
-    renderCarrito();
-    actualizarContador();
+    refrescarCarrito();
   });
 });
