@@ -1,0 +1,7 @@
+[
+  { "nombre": "Mouse Gamer", "precio": 2500 },
+  { "nombre": "Teclado Mecánico", "precio": 4200 },
+  { "nombre": "Auriculares Inalámbricos", "precio": 3500 },
+  { "nombre": "Parlante Bluetooth", "precio": 2800 },
+  { "nombre": "Monitor 24\"", "precio": 8500 }
+]
